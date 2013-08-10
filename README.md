@@ -19,6 +19,8 @@ Run get_card_pic() to get the card images, again passing in the card ID range, f
 
 Run the get_symbols() procedure to get all the various cards symbols: mana symbols, mana costs, and tap symbol. This procedure takes no arguments. Again, the symbols will be saved in your working directory. 
 
+The singlecardgrab.py will define procedures that will go an get info for a single card ID and print the info it captures. Pass in a card ID to the get_card_info() procedure.
+
 Things still being worked on -
 
 As I mentioned, saving into subdirs for the images and symbols.
