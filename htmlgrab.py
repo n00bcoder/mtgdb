@@ -94,9 +94,8 @@ def get_mana_cost(block, mana_cost_read, mana_cost_end, mana_cost):
 def fix_card_type(card_type, main_type, subtype):
 	main_type_end = card_type.find("\xe2")
 	if main_type_end == -1:
-		subtype = ""
 		main_type = card_type
-		return main_type, subtype
+		return main_type
 	main_type = card_type[:main_type_end].strip()
 	subtype_start = main_type_end + 3
 	subtype = card_type[subtype_start:].strip()
