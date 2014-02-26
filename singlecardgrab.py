@@ -1,23 +1,23 @@
 import urllib2		#import url getter library
 
 #list of certain sections in the html that are important
-section_lookup = ['_nameRow"', '_manaRow"', '_cmcRow"', '_typeRow"', '_ptRow"']
+section_lookup = ['_nameRow"', '_manaRow"', '_cmcRow"', '_typeRow"', '_ptRow"', '_numberRow"'']
 
 #empty string variables to pass to the functions - not sure I actually needs these with the way it really works
 #these were here so I could return them, but I don't think I need to do that
-card_value = ""
-mana_cost = ""
-card_name = ""
-card_type = ""
-main_type = ""
-subtype = ""
-card_text = ""
-rarity = ""
-card_set = ""
-power_toughness = ""
+#mana_cost = ""
+#card_name = ""
+#card_type = ""
+#main_type = ""
+#subtype = ""
+#card_text = ""
+#rarity = ""
+#card_set = ""
+#power_toughness = ""
+#card_number = ""
 
 #looks for info between certain tags using the section_lookup to start from
-def get_info_after_value(block, card_value_read, card_value):
+def get_info_after_value(block, card_value_read):
 	read_start = block.find(card_value_read)
 	card_value_start = block.find('ue">', read_start) + 4
 	card_value_end = block.find('</div>', card_value_start)
@@ -26,7 +26,7 @@ def get_info_after_value(block, card_value_read, card_value):
 	return card_value
 
 #gets the mana cost and formats it into single letter cost labels for colors
-def get_mana_cost(block, mana_cost_read, mana_cost_end, mana_cost):
+def get_mana_cost(block, mana_cost_read, mana_cost_end):
 	mana_start = block.find(mana_cost_read)
 	mana_end = block.find(mana_cost_end)
 	mana_cost_start = block.find("alt=", mana_start) + 5
@@ -82,7 +82,7 @@ def get_mana_cost(block, mana_cost_read, mana_cost_end, mana_cost):
 	return mana_cost
 
 #takes the card type and splits it into the main type and subtype, strips everything else off
-def fix_card_type(card_type, main_type, subtype):
+def fix_card_type(card_type):
 	main_type_end = card_type.find("\xe2")
 	if main_type_end == -1:
 		subtype = ""
@@ -94,7 +94,7 @@ def fix_card_type(card_type, main_type, subtype):
 	return main_type, subtype
 	
 #cycles through the card text group looking for multiple sections of it; does not capture flavor text
-def get_card_text(block, card_text, text_area_end):
+def get_card_text(block, text_area_end):
 	text_block_start = block.find('Card Text:')								#start of the card text area
 	if text_block_start == -1:												#check to see if there's any text
 		card_text = ""
@@ -116,7 +116,7 @@ def get_card_text(block, card_text, text_area_end):
 	return card_text														#once done, return combined card text
 
 #gets the rarity of the card alone with the card set - combined into one function because it was easy
-def get_rarity_and_set(block, rarity, card_set):
+def get_rarity_and_set(block):
 	rarity_pos = block.find("rarity=") + 7
 	rarity = block[rarity_pos:rarity_pos + 1]
 	card_set_start = block.find('alt="', rarity_pos) + 5
@@ -125,7 +125,7 @@ def get_rarity_and_set(block, rarity, card_set):
 	return rarity, card_set
 	
 #gets power and toughness, pretty simple
-def get_power_toughness(block,power_toughness):
+def get_power_toughness(block):
 	pt_read = block.find("P/T:")
 	if pt_read == -1:
 		return
@@ -135,15 +135,16 @@ def get_power_toughness(block,power_toughness):
 	return power_toughness
 
 #this runs all the functions, passes what needs to be passed to them, sends things to get fixed, and returns all the info as a tuple
-def parse_the_info(block, card_value, card_name, mana_cost, card_type, main_type, subtype, card_text, rarity, card_set, power_toughness):
-	card_name = get_info_after_value(block, section_lookup[0], card_value)
-	mana_cost = get_mana_cost(block, section_lookup[1], section_lookup[2], card_value)
-	card_type = get_info_after_value(block, section_lookup[3], card_value)
-	main_type, subtype = fix_card_type(card_type, main_type, subtype)
-	card_text = get_card_text(block, card_text, section_lookup[4])
-	rarity, card_set = get_rarity_and_set(block,rarity, card_set)
-	power_toughness = get_power_toughness(block, power_toughness)
-	return card_name, mana_cost, main_type, subtype, card_text, card_set, rarity, power_toughness
+def parse_the_info(block):
+	card_name = get_info_after_value(block, section_lookup[0])
+	mana_cost = get_mana_cost(block, section_lookup[1], section_lookup[2])
+	card_type = get_info_after_value(block, section_lookup[3])
+	main_type, subtype = fix_card_type(card_type)
+	card_text = get_card_text(block, section_lookup[4])
+	rarity, card_set = get_rarity_and_set(block)
+	power_toughness = get_power_toughness(block)
+	card_number = get_info_after_value(block, section_lookup[5]) #y u not return number?!
+	return card_name, mana_cost, main_type, subtype, card_text, card_set, rarity, power_toughness, card_number
 
 #main function - initializes where the card ids start, connects to the db, then loops through all the web urls
 #inserting the card ID as it goes through
@@ -154,11 +155,11 @@ def get_card_info(card_id):
 	search_start = website_html.find("smallGreyMono") + 1
 	block_start = website_html.find("smallGreyMono", search_start)
 	block = website_html[block_start:]
-	card = parse_the_info(block, card_value, card_name, mana_cost, card_type, main_type, subtype, card_text, rarity, card_set, power_toughness)
+	card = parse_the_info(block)
 	card_list = list(card)
 	card_list.insert(0, cardID)
 	return card_list
 
 print "Run get_card_info() and pass in the card ID of the card you want"
 	
-#results are card_list[Card ID, Card Name, Casting Cost, Main Type, Subtype, Card Text, Card Set, Rarity, Power/Toughness]
+#results are card_list[Card ID, Card Name, Casting Cost, Main Type, Subtype, Card Text, Card Set, Rarity, Power/Toughness, Card Number]
