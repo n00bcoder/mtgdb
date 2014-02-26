@@ -1,20 +1,7 @@
 import urllib2		#import url getter library
 
 #list of certain sections in the html that are important
-section_lookup = ['_nameRow"', '_manaRow"', '_cmcRow"', '_typeRow"', '_ptRow"', '_numberRow"'']
-
-#empty string variables to pass to the functions - not sure I actually needs these with the way it really works
-#these were here so I could return them, but I don't think I need to do that
-#mana_cost = ""
-#card_name = ""
-#card_type = ""
-#main_type = ""
-#subtype = ""
-#card_text = ""
-#rarity = ""
-#card_set = ""
-#power_toughness = ""
-#card_number = ""
+section_lookup = ['_nameRow"', '_manaRow"', '_cmcRow"', '_typeRow"', '_ptRow"', '_numberRow"']
 
 #looks for info between certain tags using the section_lookup to start from
 def get_info_after_value(block, card_value_read):
@@ -121,7 +108,7 @@ def get_rarity_and_set(block):
 	rarity = block[rarity_pos:rarity_pos + 1]
 	card_set_start = block.find('alt="', rarity_pos) + 5
 	card_set_end = block.find('(', card_set_start)
-	card_set = block[card_set_start:card_set_end]
+	card_set = block[card_set_start:card_set_end].strip()
 	return rarity, card_set
 	
 #gets power and toughness, pretty simple
@@ -157,7 +144,7 @@ def get_card_info(card_id):
 	block = website_html[block_start:]
 	card = parse_the_info(block)
 	card_list = list(card)
-	card_list.insert(0, cardID)
+	card_list.insert(0, card_id)
 	return card_list
 
 print "Run get_card_info() and pass in the card ID of the card you want"
